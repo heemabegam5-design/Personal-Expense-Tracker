@@ -1,0 +1,53 @@
+// ---------- State ----------
+const STORAGE_KEY = "expense-tracker-data";
+let transactions = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+// ---------- DOM references ----------
+const form = document.getElementById("txForm");
+const titleEl = document.getElementById("title");
+const amountEl = document.getElementById("amount");
+const typeEl = document.getElementById("type");
+const categoryEl = document.getElementById("category");
+const dateEl = document.getElementById("date");
+const errorEl = document.getElementById("error");
+const listEl = document.getElementById("list");
+const emptyEl = document.getElementById("empty");
+const filterType = document.getElementById("filterType");
+const filterCategory = document.getElementById("filterCategory");
+const breakdownEl = document.getElementById("breakdown");
+
+// ---------- Helpers ----------
+const formatINR = (n) =>
+  "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+
+// ---------- Add transaction ----------
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+function refreshCategoryFilter() {
+  const current = filterCategory.value;
+  const cats = [...new Set(transactions.map((t) => t.category))].sort();
+  filterCategory.innerHTML =
+    '<option value="all">All categories</option>' +
+    cats.map((c) => `<option>${c}</option>`).join("");
+  filterCategory.value = cats.includes(current) ? current : "all";
+}
+
+function escapeHTML(str) {
+  return str.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function render() {
+  refreshCategoryFilter();
+  renderSummary();
+  renderList();
+  renderBreakdown();
+}
+
+filterType.addEventListener("change", renderList);
+filterCategory.addEventListener("change", renderList);
+
+// ---------- Init ----------
+dateEl.value = new Date().toISOString().slice(0, 10);
+render();
